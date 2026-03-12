@@ -6,7 +6,6 @@ import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withSpring,
-  runOnJS,
   interpolate,
   Extrapolation,
 } from 'react-native-reanimated';
@@ -90,7 +89,7 @@ export default function App() {
           translateX.value = 0;
           bgProgress.value = 0;
           indexSV.value = nextIdx;
-          runOnJS(setCurrentIndex)(nextIdx);
+          setCurrentIndex(nextIdx);
         });
       } else {
         translateX.value = withSpring(0, SPRING);
