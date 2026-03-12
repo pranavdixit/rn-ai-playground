@@ -9,6 +9,7 @@ import Animated, {
   interpolate,
   Extrapolation,
 } from 'react-native-reanimated';
+import { runOnJS } from 'react-native-worklets';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const SWIPE_THRESHOLD = SCREEN_WIDTH * 0.3;
@@ -89,7 +90,7 @@ export default function App() {
           translateX.value = 0;
           bgProgress.value = 0;
           indexSV.value = nextIdx;
-          setCurrentIndex(nextIdx);
+          runOnJS(setCurrentIndex)(nextIdx);
         });
       } else {
         translateX.value = withSpring(0, SPRING);
