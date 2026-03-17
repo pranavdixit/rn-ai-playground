@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Dimensions, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { GestureDetector, GestureHandlerRootView, Gesture } from 'react-native-gesture-handler';
@@ -66,37 +66,40 @@ export default function App() {
     ],
   }));
 
-  const pan = Gesture.Pan()
-    .activeOffsetX([-10, 10])   // only activate for horizontal movement
-    .failOffsetY([-10, 10])     // yield to vertical scroll inside the card
-    .onUpdate((e) => {
-      translateX.value = e.translationX;
-      bgProgress.value = Math.min(Math.abs(e.translationX) / (SCREEN_WIDTH * 0.4), 1);
-    })
-    .onEnd((e) => {
-      'worklet';
-      const canGoNext = e.translationX > SWIPE_THRESHOLD && indexSV.value < CARDS.length - 1;
-      const canGoPrev = e.translationX < -SWIPE_THRESHOLD && indexSV.value > 0;
+  // useMemo keeps the same gesture object across re-renders so GestureDetector
+  // never tears down the active recogniser mid-swipe (fixes unresponsive-after-swipe bug)
+  const pan = useMemo(() =>
+    Gesture.Pan()
+      .activeOffsetX([-10, 10])
+      .failOffsetY([-10, 10])
+      .onUpdate((e) => {
+        translateX.value = e.translationX;
+        bgProgress.value = Math.min(Math.abs(e.translationX) / (SCREEN_WIDTH * 0.4), 1);
+      })
+      .onEnd((e) => {
+        const canGoNext = e.translationX > SWIPE_THRESHOLD && indexSV.value < CARDS.length - 1;
+        const canGoPrev = e.translationX < -SWIPE_THRESHOLD && indexSV.value > 0;
 
-      if (canGoNext || canGoPrev) {
-        const direction = canGoNext ? 1 : -1;
-        const targetX = direction * SCREEN_WIDTH * 1.5;
-        const nextIdx = indexSV.value + direction;
+        if (canGoNext || canGoPrev) {
+          const direction = canGoNext ? 1 : -1;
+          const targetX = direction * SCREEN_WIDTH * 1.5;
+          const nextIdx = indexSV.value + direction;
 
-        bgProgress.value = withSpring(1, SPRING);
-        translateX.value = withSpring(targetX, SPRING, () => {
-          'worklet';
-          // Reset shared values BEFORE runOnJS so new cards render in correct positions
-          translateX.value = 0;
-          bgProgress.value = 0;
-          indexSV.value = nextIdx;
-          runOnJS(setCurrentIndex)(nextIdx);
-        });
-      } else {
-        translateX.value = withSpring(0, SPRING);
-        bgProgress.value = withSpring(0, SPRING);
-      }
-    });
+          bgProgress.value = withSpring(1, SPRING);
+          translateX.value = withSpring(targetX, SPRING, () => {
+            // Reset shared values BEFORE runOnJS so new cards render in correct positions
+            translateX.value = 0;
+            bgProgress.value = 0;
+            indexSV.value = nextIdx;
+            runOnJS(setCurrentIndex)(nextIdx);
+          });
+        } else {
+          translateX.value = withSpring(0, SPRING);
+          bgProgress.value = withSpring(0, SPRING);
+        }
+      }),
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  []);
 
   const ci = currentIndex;
 
