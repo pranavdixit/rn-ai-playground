@@ -139,14 +139,14 @@ export default function App() {
               </Animated.View>
             )}
 
-            {/* Top card — swipeable */}
+            {/* Top card — swipeable (no ScrollView — it steals touches and freezes the pan gesture) */}
             <GestureDetector gesture={pan}>
               <Animated.View
                 style={[styles.card, { backgroundColor: CARDS[ci].color, zIndex: 10 }, topCardStyle]}
               >
-                <ScrollView contentContainerStyle={styles.cardContent} showsVerticalScrollIndicator={false}>
+                <View style={styles.cardContent}>
                   <Text style={styles.cardText}>{CARDS[ci].text}</Text>
-                </ScrollView>
+                </View>
               </Animated.View>
             </GestureDetector>
 
